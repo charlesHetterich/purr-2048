@@ -1,9 +1,10 @@
 # Credits & attribution
 
-All cat photos and the meow sound are embedded in `dist/index.html` as data URIs.
-They are sourced from Wikimedia Commons under public-domain / CC0 / CC-BY / CC-BY-SA licenses.
+All cat photos and meow sounds are embedded in `dist/index.html` as data URIs (and the
+photos are also in `assets/` for the README). Everything is sourced from Wikimedia Commons
+under public-domain / CC0 / CC-BY / CC-BY-SA licenses.
 
-## Cat photos (kitten → lion size ramp)
+## Cat photos (kitten → lion → transcendence)
 
 | Tile | Subject | Source | License |
 |------|---------|--------|---------|
@@ -18,12 +19,22 @@ They are sourced from Wikimedia Commons under public-domain / CC0 / CC-BY / CC-B
 | 512 | Leopard, Kruger | https://commons.wikimedia.org/wiki/File:Leopard_(Panthera_pardus_pardus)_Kruger.jpg | CC BY-SA 4.0 |
 | 1024 | Bengal tiger | https://commons.wikimedia.org/wiki/File:Bengal_tiger_(Panthera_tigris_tigris)_female_3.jpg | CC BY-SA 4.0 |
 | 2048 | Male lion with full mane | https://commons.wikimedia.org/wiki/File:Lion_(Panthera_leo)_male_6y.jpg | CC BY-SA 4.0 |
+| 4096 | White lion | https://commons.wikimedia.org/wiki/File:White_Lion.jpg | CC BY 2.5 (Stano Novak) |
+| 8192 | Bastet, Egyptian cat goddess (bronze, Museo Egizio) | https://commons.wikimedia.org/wiki/File:Statue_of_the_goddess_Bastet,_bronze_-_Museo_Egizio,_Turin_S_52_p01.jpg | CC0 |
+| 16384 | Great Sphinx of Giza | https://commons.wikimedia.org/wiki/File:Great_Sphinx_of_Giza_(2).jpg | CC BY-SA 4.0 (Hamerani) |
+| 32768 | Constellation Leo star chart (Fortin/Flamsteed, 1776) | https://commons.wikimedia.org/wiki/File:1776_star_chart_of_the_constellation_Leo,_from_Fortin%27s_Atlas_Celeste_de_Flamsteed.jpg | Public domain |
 
-## Meow sound (plays on merge)
+## Meow sounds (a random one plays on each merge)
+
+All converted to MP3 for cross-browser playback.
 
 | Subject | Source | License |
 |---------|--------|---------|
 | Cat meow | https://commons.wikimedia.org/wiki/File:Meow.ogg | CC BY-SA 3.0 |
+| Meow of a Siamese cat | https://commons.wikimedia.org/wiki/File:Meow_of_a_Siamese_cat_-_freemaster2.wav | CC0 |
+| Meow of a pleading cat | https://commons.wikimedia.org/wiki/File:Meow_of_a_pleading_cat.oga | Public domain |
+| Young female cat meow | https://commons.wikimedia.org/wiki/File:Maullido_de_gata_hembra_joven.ogg | CC0 |
+| Meow (normalized) | https://commons.wikimedia.org/wiki/File:Meow_normalized.opus | CC BY-SA 3.0 |
 
 Visit each source page for the individual author/photographer names. Images were
-downscaled (~280px) and re-compressed for embedding; the meow was used as-is.
+downscaled (~280px) and re-compressed for embedding; meows were converted to mono MP3.
