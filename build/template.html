@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Purr 2048 — Kitten to Lion</title>
+<style>
+  :root{
+    color-scheme:dark;
+    --bg:#0c0a08; --board:#15110d; --cell:#1f1813; --line:#2c231b;
+    --amber:#ffb02e; --green:#36d399; --slate:#9a8a78;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    background:var(--bg);color:#f0e6da;
+    font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    display:flex;justify-content:center;align-items:center;
+    user-select:none;-webkit-user-select:none;touch-action:none;overflow:hidden;
+  }
+  .app{width:100%;max-width:440px;padding:1rem;display:flex;flex-direction:column;gap:.9rem}
+
+  .top{display:flex;justify-content:space-between;align-items:flex-end;gap:1rem}
+  .title h1{font-family:"Arial Narrow","Helvetica Neue",sans-serif;font-weight:700;font-size:1.7rem;letter-spacing:.04em;text-transform:uppercase;color:var(--amber);line-height:.95}
+  .title p{font-size:.6rem;letter-spacing:.1em;color:var(--slate);text-transform:uppercase;margin-top:.25rem}
+  .scores{display:flex;gap:.5rem}
+  .score{background:var(--board);border:1px solid var(--line);border-radius:5px;padding:.4rem .7rem;text-align:center;min-width:74px}
+  .score .k{font-size:.52rem;letter-spacing:.14em;text-transform:uppercase;color:var(--slate)}
+  .score .v{font-size:1.05rem;font-weight:700;font-variant-numeric:tabular-nums;color:#fbf3e8;margin-top:.05rem}
+
+  .wrap{position:relative;background:var(--board);border:1px solid var(--line);border-radius:8px;padding:8px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:8px;aspect-ratio:1}
+  .bgcell{background:var(--cell);border-radius:5px}
+  .tiles{position:absolute;inset:8px;pointer-events:none}
+  .tile{
+    position:absolute;border-radius:6px;overflow:hidden;
+    background-size:cover;background-position:center;
+    box-shadow:inset 0 0 0 2px rgba(0,0,0,.22);
+    transition:left .1s ease,top .1s ease;
+  }
+  .tile.pop{animation:pop .14s ease}
+  .tile.new{animation:appear .16s ease}
+  @keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.12)}100%{transform:scale(1)}}
+  @keyframes appear{0%{transform:scale(.1);opacity:0}100%{transform:scale(1);opacity:1}}
+  @media(prefers-reduced-motion:reduce){.tile{transition:none}.tile.pop,.tile.new{animation:none}}
+
+  .hint{font-size:.62rem;letter-spacing:.06em;color:var(--slate);text-align:center}
+
+  .ov{position:absolute;inset:0;background:rgba(7,5,3,.94);border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:1.5rem;z-index:5}
+  .ov.hide{display:none}
+  .ov h2{font-family:"Arial Narrow","Helvetica Neue",sans-serif;font-weight:700;font-size:2.2rem;letter-spacing:.04em;text-transform:uppercase;line-height:1}
+  .ov.win h2{color:var(--green)} .ov.lose h2{color:var(--amber)}
+  .ov p{font-size:.74rem;color:#e8dccb;letter-spacing:.03em;line-height:1.6;margin-top:.7rem;max-width:30ch}
+  .ov p b{color:var(--amber)}
+  button{margin-top:1.2rem;cursor:pointer;border:none;border-radius:5px;font:inherit;font-weight:700;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;padding:.8rem 1.5rem;background:var(--amber);color:#2a1a00}
+  button.like{background:transparent;color:var(--green);border:1px solid rgba(54,211,153,.5);margin-top:.7rem}
+  button.ghost{background:transparent;color:var(--slate);border:1px solid var(--line);font-size:.66rem;padding:.55rem 1rem}
+  button:active{transform:translateY(1px)}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div class="title"><h1>Purr 2048</h1><p>merge kittens into cat-gods</p></div>
+    <div class="scores">
+      <div class="score"><div class="k">Purrs</div><div class="v" id="score">0</div></div>
+      <div class="score"><div class="k">Best</div><div class="v" id="best">0</div></div>
+    </div>
+  </div>
+
+  <div class="wrap" id="wrap">
+    <div class="grid" id="bg"></div>
+    <div class="tiles" id="tiles"></div>
+    <div class="ov hide" id="ov">
+      <h2 id="ovTitle"></h2>
+      <p id="ovText"></p>
+      <button class="like" id="btnLike">Adopt this game — tap &hearts;</button>
+      <button id="btnAgain">New litter</button>
+      <button class="ghost hide" id="btnKeep">Keep the cuddle pile going</button>
+    </div>
+  </div>
+
+  <p class="hint">Swipe or use arrow keys · match cats to merge · reach the <b style="color:var(--amber)">Sphinx (2048)</b></p>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const DEEP_LINK='https://dodonew.dot';   // <-- set to your in-app .dot deep link
+const N=4, GOAL=2048;
+
+// value -> cat photo (kitten ... lion ... transcendence). Embedded as data URIs.
+const CAT={
+  2:'__CAT_2__',4:'__CAT_4__',8:'__CAT_8__',16:'__CAT_16__',32:'__CAT_32__',
+  64:'__CAT_64__',128:'__CAT_128__',256:'__CAT_256__',512:'__CAT_512__',
+  1024:'__CAT_1024__',2048:'__CAT_2048__',4096:'__CAT_4096__'
+};
+const MAXVAL=4096;
+function catFor(v){ return CAT[v]||CAT[MAXVAL]; }   // anything beyond max keeps the cosmic cat
+
+// meow on merge — a random one each time, for variety
+const MEOWS=[__MEOWS__];
+function playMeow(){
+  if(!MEOWS.length) return;
+  try{ const a=new Audio(MEOWS[Math.random()*MEOWS.length|0]); a.volume=.6; a.play().catch(()=>{}); }catch(e){}
+}
+
+let grid, score=0, best=0, won=false, busy=false;
+const tilesEl=$('tiles');
+let gap=8, size=0;
+
+function buildBG(){ $('bg').innerHTML=Array(N*N).fill('<div class="bgcell"></div>').join(''); }
+function measure(){ const w=tilesEl.clientWidth; size=(w-gap*(N-1))/N; }
+function pos(i){ return gap*i + size*i; }
+
+function empties(){ const e=[]; grid.forEach((v,i)=>{ if(!v) e.push(i); }); return e; }
+function addRandom(isNew){
+  const e=empties(); if(!e.length) return;
+  const i=e[Math.random()*e.length|0];
+  grid[i]=Math.random()<0.9?2:4;
+  grid['_new'+i]=isNew!==false;
+}
+
+function render(){
+  measure();
+  tilesEl.innerHTML='';
+  for(let i=0;i<N*N;i++){
+    const v=grid[i]; if(!v) continue;
+    const r=i/N|0, c=i%N;
+    const t=document.createElement('div');
+    t.className='tile'+(grid['_new'+i]?' new':'')+(grid['_pop'+i]?' pop':'');
+    t.style.cssText=`width:${size}px;height:${size}px;left:${pos(c)}px;top:${pos(r)}px`;
+    t.style.backgroundImage=`url(${catFor(v)})`;
+    tilesEl.appendChild(t);
+    delete grid['_new'+i]; delete grid['_pop'+i];
+  }
+  $('score').textContent=score;
+  if(score>best){ best=score; } $('best').textContent=best;
+}
+
+let mergedThisMove=false;
+
+// slide one line (array of 4 indices, in travel order) — returns moved?
+function slide(order){
+  let moved=false;
+  const vals=order.map(i=>grid[i]).filter(v=>v);
+  const out=[];
+  for(let k=0;k<vals.length;k++){
+    if(vals[k]===vals[k+1]){ const m=vals[k]*2; out.push(m); score+=m; mergedThisMove=true; if(m>=GOAL)won=won||true; k++; }
+    else out.push(vals[k]);
+  }
+  while(out.length<N) out.push(0);
+  order.forEach((i,k)=>{ if(grid[i]!==out[k]){ moved=true; if(out[k] && (k>=vals.length || out[k]!==vals[k])) grid['_pop'+i]=true; } grid[i]=out[k]; });
+  return moved;
+}
+
+function move(dir){
+  if(busy||!$('ov').classList.contains('hide')) return;
+  let moved=false; mergedThisMove=false;
+  for(let l=0;l<N;l++){
+    let order=[];
+    for(let k=0;k<N;k++){
+      if(dir==='L') order.push(l*N+k);
+      else if(dir==='R') order.push(l*N+(N-1-k));
+      else if(dir==='U') order.push(k*N+l);
+      else order.push((N-1-k)*N+l);
+    }
+    if(slide(order)) moved=true;
+  }
+  if(moved){
+    if(mergedThisMove) playMeow();
+    addRandom(true);
+    render();
+    if(navigator.vibrate) navigator.vibrate(8);
+    checkEnd();
+  }
+}
+
+function movesLeft(){
+  if(empties().length) return true;
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    const v=grid[r*N+c];
+    if(c<N-1 && v===grid[r*N+c+1]) return true;
+    if(r<N-1 && v===grid[(r+1)*N+c]) return true;
+  }
+  return false;
+}
+
+function checkEnd(){
+  if(won){ won=false; endScreen('win'); return; }
+  if(!movesLeft()) endScreen('lose');
+}
+
+function endScreen(kind){
+  const ov=$('ov'); ov.className='ov '+kind;
+  if(kind==='win'){
+    $('ovTitle').textContent='THE SPHINX';
+    $('ovText').innerHTML='You raised a tiny kitten all the way into the <b>Great Sphinx</b> — an ancient god-beast. Keep merging to reach the <b>cosmic Leo</b> and transcend the mortal cat realm… Purrs gathered: <b>'+score+'</b>.';
+    $('btnKeep').classList.remove('hide');
+  }else{
+    $('ovTitle').textContent='Cat nap';
+    $('ovText').innerHTML='The board is one big cuddle pile — no room to move. You collected <b>'+score+'</b> purrs before everyone fell asleep.';
+    $('btnKeep').classList.add('hide');
+  }
+}
+
+function reset(){
+  grid=new Array(N*N).fill(0); score=0; won=false;
+  addRandom(false); addRandom(false);
+  $('ov').classList.add('hide');
+  render();
+}
+
+// input: keys
+addEventListener('keydown',e=>{
+  const m={ArrowLeft:'L',ArrowRight:'R',ArrowUp:'U',ArrowDown:'D',a:'L',d:'R',w:'U',s:'D'};
+  if(m[e.key]){ e.preventDefault(); move(m[e.key]); }
+});
+// input: swipe
+let sx=0,sy=0,st=0;
+$('wrap').addEventListener('pointerdown',e=>{ sx=e.clientX; sy=e.clientY; st=Date.now(); });
+$('wrap').addEventListener('pointerup',e=>{
+  const dx=e.clientX-sx, dy=e.clientY-sy, ad=Math.abs(dx), ay=Math.abs(dy);
+  if(Math.max(ad,ay)<24) return;
+  move(ad>ay ? (dx>0?'R':'L') : (dy>0?'D':'U'));
+});
+
+$('btnAgain').addEventListener('click',reset);
+$('btnKeep').addEventListener('click',()=>$('ov').classList.add('hide'));
+$('btnLike').addEventListener('click',()=>{ location.href=DEEP_LINK; });
+addEventListener('resize',()=>{ if(grid) render(); });
+
+buildBG(); reset();
+</script>
+</body>
+</html>

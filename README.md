@@ -28,3 +28,18 @@ Each tile value is its own cat, escalating from kitten to cat-god:
 Reach **2048** (the Sphinx) to win — but the truly devoted keep merging up to the cosmic Leo.
 
 See [`CREDITS.md`](CREDITS.md) for image and sound attribution (all public-domain / CC0 / CC-BY / CC-BY-SA, sourced from Wikimedia Commons; the value-2 and value-4 kittens are your own additions).
+
+## Build & deploy
+
+The game is generated from [`build/template.html`](build/template.html) plus the photos and
+meows in [`assets/`](assets), all inlined into `dist/index.html`:
+
+```sh
+npm run build      # regenerate dist/index.html from assets/ + template
+playground deploy  # build (above) + upload + publish to the playground
+```
+
+To swap a cat, drop a new `assets/cat_<value>.jpg` (e.g. `cat_256.jpg` for the lion tile),
+re-run `npm run build`, and redeploy. Meows are any `assets/meow*.mp3` — add or remove files
+and they're picked up automatically.
+

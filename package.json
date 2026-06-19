@@ -1,0 +1,10 @@
+{
+  "name": "purr-2048",
+  "version": "1.0.0",
+  "description": "Cat-themed 2048 — merge kittens all the way up to a cosmic cat-god.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build/build.mjs"
+  }
+}
